@@ -277,6 +277,7 @@ class BinnedUniforms(Distribution):
         # one_hot_bin_indicator.shape: (*batch_shape, numb_bins)
         # Handling the quantile equal to 1.0
         higher_than_last = quantiles[..., 0] >= incomplete_cdf_upper[..., -1]
+        # moudheus: commenting this line
         #one_hot_bin_indicator[..., -1][higher_than_last] = True
 
         upper_edges = self.bin_edges[1:].unsqueeze(dim=0)
