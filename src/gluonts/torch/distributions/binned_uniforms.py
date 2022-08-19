@@ -268,8 +268,13 @@ class BinnedUniforms(Distribution):
         # including the bin (upper)
         incomplete_cdf_upper = bins_prob.cumsum(dim=-1)
         # incomplete_cdf_upper.shape: (*batch_shape, numb_bins)
-        incomplete_cdf_lower = bins_prob.cumsum(dim=-1) - bins_prob
+        
+        # moudheus: this is not numerically safe way to shift values, commenting
+        # incomplete_cdf_lower = bins_prob.cumsum(dim=-1) - bins_prob
         # incomplete_cdf_lower.shape: (*batch_shape, numb_bins)
+
+        incomplete_cdf_lower = torch.zeros_like(incomplete_cdf_upper)
+        incomplete_cdf_lower[:, 1:] = incomplete_cdf_upper[:, :-1]
 
         one_hot_bin_indicator = (incomplete_cdf_lower <= quantiles) * (
             quantiles < incomplete_cdf_upper
@@ -278,7 +283,7 @@ class BinnedUniforms(Distribution):
         # Handling the quantile equal to 1.0
         higher_than_last = quantiles[..., 0] >= incomplete_cdf_upper[..., -1]
         # moudheus: commenting this line
-        #one_hot_bin_indicator[..., -1][higher_than_last] = True
+        one_hot_bin_indicator[..., -1][higher_than_last] = True
 
         upper_edges = self.bin_edges[1:].unsqueeze(dim=0)
         # upper_edges.shape: (1, numb_bins)
