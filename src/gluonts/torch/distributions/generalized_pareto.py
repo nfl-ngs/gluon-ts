@@ -125,9 +125,10 @@ class GeneralizedPareto(Distribution):
         """
         cdf values for a tensor x of shape (*batch_shape)
         """
+        x = torch.clamp(x, 1e-9)
         x = x.unsqueeze(dim=-1)
         x_shifted = torch.div(x, self.beta)
-        u = 1 - torch.pow(1 + torch.clamp(self.xi * x_shifted, 0), -torch.reciprocal(self.xi))
+        u = 1 - torch.pow(1 + self.xi * x_shifted, -torch.reciprocal(self.xi))
         return u.squeeze(dim=-1)
 
     def icdf(self, value):
