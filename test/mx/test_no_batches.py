@@ -11,24 +11,20 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-import warnings
+import pytest
 
-# flake8: noqa
-
-from gluonts.exceptions import (
-    assert_gluonts,
-    assert_data_error,
-    GluonTSException,
-    GluonTSDataError,
-    GluonTSDateBoundsError,
-    GluonTSHyperparametersError,
-    GluonTSUserError,
-)
+from gluonts.exceptions import GluonTSDataError
+from gluonts.mx.model.deepar import DeepAREstimator
+from gluonts.mx.trainer import Trainer
 
 
-warnings.warn(
-    "`gluonts.core.exception` is deprecated, "
-    "use `gluonts.exceptions` instead.",
-    DeprecationWarning,
-    stacklevel=2,
-)
+@pytest.mark.parametrize("dataset", [[]])
+def test_deepar_no_batches(dataset):
+    estimator = DeepAREstimator(
+        prediction_length=10,
+        freq="H",
+        trainer=Trainer(epochs=1, num_batches_per_epoch=1),
+    )
+
+    with pytest.raises(GluonTSDataError):
+        estimator.train(dataset)
