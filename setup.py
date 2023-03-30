@@ -25,18 +25,6 @@ GPU_SUPPORT = 0 == int(
     )
 )
 
-try:
-    from sphinx import apidoc, setup_command
-
-    HAS_SPHINX = True
-except ImportError:
-    logging.warning(
-        "Package 'sphinx' not found. You will not be able to build the docs."
-    )
-
-    HAS_SPHINX = False
-
-
 def read(*names, encoding="utf8"):
     with (ROOT / Path(*names)).open(encoding=encoding) as fp:
         return fp.read()
@@ -203,6 +191,9 @@ mxnet_require = find_requirements("requirements-mxnet.txt")
 torch_require = find_requirements("requirements-pytorch.txt")
 
 setup_requires = find_requirements("requirements-setup.txt")
+r_requires =  find_requirements("requirements-extras-r.txt")
+prophet_requires = find_requirements("requirements-extras-prophet.txt")
+
 
 dev_require = (
     arrow_require
@@ -213,6 +204,18 @@ dev_require = (
     + sagemaker_api_require
 )
 
+extras_require = {
+        "arrow": arrow_require,
+        "dev": dev_require,
+        "docs": docs_require,
+        "mxnet": mxnet_require,
+        "R": r_requires,
+        "Prophet": prophet_requires,
+        "pro": arrow_require + ["orjson"],
+        "shell": shell_require,
+        "torch": torch_require,
+    }
+print(extras_require)
 setup_kwargs: dict = dict(
     name="gluonts",
     version=version,
@@ -239,8 +242,8 @@ setup_kwargs: dict = dict(
         "dev": dev_require,
         "docs": docs_require,
         "mxnet": mxnet_require,
-        "R": find_requirements("requirements-extras-r.txt"),
-        "Prophet": find_requirements("requirements-extras-prophet.txt"),
+        "R": r_requires,
+        "Prophet": prophet_requires,
         "pro": arrow_require + ["orjson"],
         "shell": shell_require,
         "torch": torch_require,
@@ -286,25 +289,6 @@ setup_kwargs: dict = dict(
     },
 )
 
-if HAS_SPHINX:
-
-    class BuildApiDoc(setup_command.BuildDoc):
-        def run(self):
-            args = list(
-                itertools.chain(
-                    ["-f"],  # force re-generation
-                    ["-P"],  # include private modules
-                    ["--implicit-namespaces"],  # respect PEP420
-                    ["-o", str(ROOT / "docs" / "api" / "gluonts")],  # out path
-                    [str(SRC / "gluonts")],  # in path
-                    ["setup*", "test", "docs", "*pycache*"],  # excluded paths
-                )
-            )
-            apidoc.main(args)
-            super(BuildApiDoc, self).run()
-
-    for command in ["build_sphinx", "doc", "docs"]:
-        setup_kwargs["cmdclass"][command] = BuildApiDoc
 
 # -----------------------------------------------------------------------------
 # start of AWS-internal section (DO NOT MODIFY THIS SECTION)!
